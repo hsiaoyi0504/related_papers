@@ -10,8 +10,15 @@ Found recent relative papers for me.
 ## Installation
 
 `pipenv install`
+`pipenv run build`
 
 ## Execution
+
+### Training
+
+`pipenv run train`
+
+### Testing
 
 `pipenv run start`
 
