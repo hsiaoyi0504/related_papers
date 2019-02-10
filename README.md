@@ -1,6 +1,6 @@
 # Related Papers
 
-Found recent relative papers for me.
+Found recent related papers for me.
 
 ## Prerequisite
 
