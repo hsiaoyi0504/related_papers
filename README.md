@@ -1,4 +1,4 @@
-# Relative Papers
+# Related Papers
 
 Found recent relative papers for me.
 
@@ -9,8 +9,8 @@ Found recent relative papers for me.
 
 ## Installation
 
-`pipenv install`
-`pipenv run build`
+- `pipenv install`
+- `pipenv run build`
 
 ## Execution
 
