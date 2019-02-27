@@ -26,3 +26,4 @@ Found recent related papers for me.
 
 - [ ] Evaluation method
 - [ ] Add start date and end date to get_recent_articles
+- [ ] Speed up the filtering process
