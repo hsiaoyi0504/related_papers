@@ -55,9 +55,7 @@ def filter_articles(pubmed_ids, webenv, query_key, mesh_terms, threshold):
                 # TODO: set a cutoff to ensure the predicted value is useful
                 if clf.predict(values) == 1:
                     filtered_ids.append(pubmed_id)
-            else:
-                # TODO: handle articles without abstract
-                pass
+            # Don't need to consider article without abstract
     return filtered_ids
 
 
