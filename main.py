@@ -8,10 +8,10 @@ from utils import abstract2words
 Entrez.email = 'hsiaoyi0504@gmail.com'
 
 
-def get_recent_articles():
+def get_recent_articles(start_date, end_date):
     # TODO: handle case with over 100000 result
     search_handler = Entrez.esearch(
-        db='pubmed', term='2015:2018[CRDT]', retmax=100000, usehistory='y')
+        db='pubmed', term='{}:{}[CRDT]'.format(start_date, end_date), retmax=100000, usehistory='y')
     record = Entrez.read(search_handler)
     return (record['IdList'], record['WebEnv'], record['QueryKey'])
 
@@ -69,6 +69,8 @@ if __name__ == '__main__':
         'Statistics as Topic/*methods', 'Transcription, Genetic/genetics'
     ]
     THRESHOLD = 3
-    pubmed_ids, webenv, query_key = get_recent_articles()
+    start_date = '2015'
+    end_date = '2018'
+    pubmed_ids, webenv, query_key = get_recent_articles(start_date, end_date)
     pubmed_ids = filter_articles(pubmed_ids, webenv, query_key, MeSH_TERMS, THRESHOLD)
     print(pubmed_ids)
