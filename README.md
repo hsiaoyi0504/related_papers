@@ -22,6 +22,14 @@ Found recent related papers for me.
 
 `pipenv run start`
 
+### Collect some data for manual annotation
+
+`pipenv run collect`
+
+### Statistics
+
+`pipenv run stats`
+
 ## TODO
 
 - [ ] Evaluation method

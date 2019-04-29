@@ -1,16 +1,11 @@
-import pickle
-from collections import Counter
 from Bio import Entrez, Medline
-import numpy as np
-from utils import abstract2words, get_recent_articles
-
+from utils import get_recent_articles
 
 Entrez.email = 'hsiaoyi0504@gmail.com'
 
 
-def filter_articles(pubmed_ids, webenv, query_key, mesh_terms, threshold):
+def measure_annotation_time(pubmed_ids, webenv, query_key, mesh_terms):
     filtered_ids = []
-    clf, word_dict = pickle.load(open('model.pkl', 'rb'))
     count = int(len(pubmed_ids))
     batch_size = 10000
     # TODO: batch prediction
@@ -50,8 +45,9 @@ def filter_articles(pubmed_ids, webenv, query_key, mesh_terms, threshold):
             # Don't need to consider article without abstract
     return filtered_ids
 
-
 if __name__ == '__main__':
+    start_date = '2015'
+    end_date = '2018'
     MeSH_TERMS = [
         'Algorithms', 'Animals', 'CLOCK Proteins/metabolism',
         'Circadian Rhythm/*physiology', 'Circadian Clocks/physiology*',
@@ -60,9 +56,5 @@ if __name__ == '__main__':
         'Lung/metabolism/physiology', 'Machine Learning', 'Mice',
         'Statistics as Topic/*methods', 'Transcription, Genetic/genetics'
     ]
-    THRESHOLD = 3
-    start_date = '2015'
-    end_date = '2018'
     pubmed_ids, webenv, query_key = get_recent_articles(start_date, end_date)
-    pubmed_ids = filter_articles(pubmed_ids, webenv, query_key, MeSH_TERMS, THRESHOLD)
-    print(pubmed_ids)
+    # pubmed_ids = measure_annotation_time(pubmed_ids, webenv, query_key, MeSH_TERMS)
