@@ -1,6 +1,15 @@
+from math import ceil
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
+from Bio import Entrez
+
+
+def get_recent_articles(start_date, end_date):
+    search_handler = Entrez.esearch(
+        db='pubmed', term='{}:{}[CRDT]'.format(start_date, end_date), retmax=100000, usehistory='y')
+    record = Entrez.read(search_handler)
+    return (int(record['Count']), record['WebEnv'], record['QueryKey'])
 
 
 def abstract2words(abstract):

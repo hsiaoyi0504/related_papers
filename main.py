@@ -2,24 +2,15 @@ import pickle
 from collections import Counter
 from Bio import Entrez, Medline
 import numpy as np
-from utils import abstract2words
+from utils import abstract2words, get_recent_articles
 
 
 Entrez.email = 'hsiaoyi0504@gmail.com'
 
 
-def get_recent_articles(start_date, end_date):
-    # TODO: handle case with over 100000 result
-    search_handler = Entrez.esearch(
-        db='pubmed', term='{}:{}[CRDT]'.format(start_date, end_date), retmax=100000, usehistory='y')
-    record = Entrez.read(search_handler)
-    return (record['IdList'], record['WebEnv'], record['QueryKey'])
-
-
-def filter_articles(pubmed_ids, webenv, query_key, mesh_terms, threshold):
+def filter_articles(count, webenv, query_key, mesh_terms, threshold):
     filtered_ids = []
     clf, word_dict = pickle.load(open('model.pkl', 'rb'))
-    count = int(len(pubmed_ids))
     batch_size = 10000
     # TODO: batch prediction
     for start in range(0, count, batch_size):
@@ -71,6 +62,6 @@ if __name__ == '__main__':
     THRESHOLD = 3
     start_date = '2015'
     end_date = '2018'
-    pubmed_ids, webenv, query_key = get_recent_articles(start_date, end_date)
-    pubmed_ids = filter_articles(pubmed_ids, webenv, query_key, MeSH_TERMS, THRESHOLD)
+    count, webenv, query_key = get_recent_articles(start_date, end_date)
+    pubmed_ids = filter_articles(count, webenv, query_key, MeSH_TERMS, THRESHOLD)
     print(pubmed_ids)
