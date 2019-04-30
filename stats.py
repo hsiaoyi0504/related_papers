@@ -1,14 +1,18 @@
+from datetime import datetime
 from Bio import Entrez, Medline
 from utils import get_recent_articles
 
 Entrez.email = 'hsiaoyi0504@gmail.com'
 
 
-def measure_annotation_time(pubmed_ids, webenv, query_key, mesh_terms):
+def measure_annotation_time(start_date, end_date, count, webenv, query_key, mesh_terms):
     filtered_ids = []
-    count = int(len(pubmed_ids))
     batch_size = 10000
-    # TODO: batch prediction
+    # debug code (modify count)
+    # count = 10001
+    durations = {}  # durations by year
+    for i in range(int(start_date), int(end_date) + 1):
+        durations[str(i)] = []
     for start in range(0, count, batch_size):
         # maximum retmax of efetch is 10000
         fetch_handler = Entrez.efetch(
@@ -17,33 +21,17 @@ def measure_annotation_time(pubmed_ids, webenv, query_key, mesh_terms):
                 webenv=webenv, query_key=query_key)
         records = Medline.parse(fetch_handler)
         for record in records:
-            pubmed_id = record['PMID']
-            record_mesh_terms = record.get('MH')
-            if record_mesh_terms is not None:
-                count = 0
-                for mesh in mesh_terms:
-                    if mesh in record_mesh_terms:
-                        count += 1
-                if count >= threshold:
-                    filtered_ids.append(pubmed_id)
-                    continue
-            abstract = record.get('AB')
-            if abstract is not None:
-                words = abstract2words(abstract)
-                c = Counter(words)
-                values = []
-                for i in range(len(word_dict)):
-                    values.append(c[word_dict[i]])
-                total_words = sum(values)
-                if total_words == 0:
-                    continue
-                values = [v / total_words for v in values]
-                values = np.array(values).reshape(1, -1)
-                # TODO: set a cutoff to ensure the predicted value is useful
-                if clf.predict(values) == 1:
-                    filtered_ids.append(pubmed_id)
-            # Don't need to consider article without abstract
+            if record.get('MH') is not None:
+                # although every record have MeSH date, many of them are not labelled
+                crdt = datetime.strptime(record.get('CRDT')[0], '%Y/%m/%d %H:%M')
+                edat = datetime.strptime(record.get('EDAT'), '%Y/%m/%d %H:%M')
+                mhda = datetime.strptime(record.get('MHDA'), '%Y/%m/%d %H:%M')
+                durations[crdt.strftime('%Y')].append((mhda - edat).days)
+    for i in range(int(start_date), int(end_date) + 1):
+        if len(durations[str(i)]) != 0:
+            print(str(i), sum(durations[str(i)])/len(durations[str(i)]))
     return filtered_ids
+
 
 if __name__ == '__main__':
     start_date = '2015'
@@ -56,5 +44,5 @@ if __name__ == '__main__':
         'Lung/metabolism/physiology', 'Machine Learning', 'Mice',
         'Statistics as Topic/*methods', 'Transcription, Genetic/genetics'
     ]
-    pubmed_ids, webenv, query_key = get_recent_articles(start_date, end_date)
-    # pubmed_ids = measure_annotation_time(pubmed_ids, webenv, query_key, MeSH_TERMS)
+    count, webenv, query_key = get_recent_articles(start_date, end_date)
+    pubmed_ids = measure_annotation_time(start_date, end_date, count, webenv, query_key, MeSH_TERMS)
