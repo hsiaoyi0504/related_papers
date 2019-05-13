@@ -1,3 +1,5 @@
+import http
+from urllib.error import HTTPError
 from datetime import datetime
 from Bio import Entrez, Medline
 from utils import get_recent_articles
@@ -14,19 +16,40 @@ def measure_annotation_time(start_date, end_date, count, webenv, query_key, mesh
     for i in range(int(start_date), int(end_date) + 1):
         durations[str(i)] = []
     for start in range(0, count, batch_size):
-        # maximum retmax of efetch is 10000
-        fetch_handler = Entrez.efetch(
-                db='pubmed', rettype='medline', retmode='text',
-                retstart=start, retmax=10000,
-                webenv=webenv, query_key=query_key)
-        records = Medline.parse(fetch_handler)
-        for record in records:
-            if record.get('MH') is not None:
-                # although every record have MeSH date, many of them are not labelled
-                crdt = datetime.strptime(record.get('CRDT')[0], '%Y/%m/%d %H:%M')
-                edat = datetime.strptime(record.get('EDAT'), '%Y/%m/%d %H:%M')
-                mhda = datetime.strptime(record.get('MHDA'), '%Y/%m/%d %H:%M')
-                durations[crdt.strftime('%Y')].append((mhda - edat).days)
+        attempt = 1
+        while attempt < 3:
+            try:
+                # maximum retmax of efetch is 10000
+                fetch_handler = Entrez.efetch(
+                        db='pubmed', rettype='medline', retmode='text',
+                        retstart=start, retmax=10000,
+                        webenv=webenv, query_key=query_key)
+                break
+            except HTTPError as err:
+                print("Received error from server %s" % err)
+                print("Attempt %i of 3" % attempt)
+                if attempt == 3:
+                    raise
+                else:
+                    attempt += 1
+        count = 0
+        while True:
+            try:
+                record = Medline.read(fetch_handler)
+                if record.get('MH') is not None:
+                    # although every record have MeSH date, many of them are not labelled
+                    crdt = datetime.strptime(record.get('CRDT')[0], '%Y/%m/%d %H:%M')
+                    edat = datetime.strptime(record.get('EDAT'), '%Y/%m/%d %H:%M')
+                    mhda = datetime.strptime(record.get('MHDA'), '%Y/%m/%d %H:%M')
+                    durations[crdt.strftime('%Y')].append((mhda - edat).days)
+                    count += 1
+            except http.client.IncompleteRead:
+                print('Error: IncompleteRead, following is the detail of the error')
+                print(record, start + count)
+                break
+            except StopIteration:
+                print('Finished {}/{} of records'.format(start, count))
+                break
     for i in range(int(start_date), int(end_date) + 1):
         if len(durations[str(i)]) != 0:
             print(str(i), sum(durations[str(i)])/len(durations[str(i)]))
