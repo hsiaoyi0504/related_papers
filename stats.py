@@ -32,7 +32,7 @@ def measure_annotation_time(start_date, end_date, count, webenv, query_key, mesh
                     raise
                 else:
                     attempt += 1
-        count = 0
+        total = 0
         while True:
             try:
                 record = Medline.read(fetch_handler)
@@ -42,13 +42,13 @@ def measure_annotation_time(start_date, end_date, count, webenv, query_key, mesh
                     edat = datetime.strptime(record.get('EDAT'), '%Y/%m/%d %H:%M')
                     mhda = datetime.strptime(record.get('MHDA'), '%Y/%m/%d %H:%M')
                     durations[crdt.strftime('%Y')].append((mhda - edat).days)
-                    count += 1
+                total += 1
             except http.client.IncompleteRead:
                 print('Error: IncompleteRead, following is the detail of the error')
-                print(record, start + count)
+                print(record, start + total)
                 break
             except StopIteration:
-                print('Finished {}/{} of records'.format(start, count))
+                print('Finished {}/{} of records'.format(start + total, count))
                 break
     for i in range(int(start_date), int(end_date) + 1):
         if len(durations[str(i)]) != 0:
