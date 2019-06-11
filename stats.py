@@ -13,10 +13,12 @@ def measure_annotation_time(start_date, end_date, count, webenv, query_key, mesh
     # debug code (modify count)
     # count = 10001
     durations = {}  # durations by year
-    num_records = {} # number of records by year 
+    num_total_records = {} # number of records by year
+    num_mesh_records = {} # number of records with MeSH term by year
     for i in range(int(start_date), int(end_date) + 1):
         durations[str(i)] = []
-        num_records[str(i)] = 0
+        num_total_records[str(i)] = 0
+        num_mesh_records[str(i)] = 0
     total_miss_crdt = 0
     for start in range(0, count, batch_size):
         attempt = 1
@@ -41,7 +43,7 @@ def measure_annotation_time(start_date, end_date, count, webenv, query_key, mesh
                 record = Medline.read(fetch_handler)
                 if record.get('CRDT') is not None:
                     crdt = datetime.strptime(record.get('CRDT')[0], '%Y/%m/%d %H:%M')
-                    num_records[crdt.strftime('%Y')] += 1
+                    num_total_records[crdt.strftime('%Y')] += 1
                 else:
                     total_miss_crdt += 1
                 if record.get('MH') is not None:
@@ -49,6 +51,7 @@ def measure_annotation_time(start_date, end_date, count, webenv, query_key, mesh
                     edat = datetime.strptime(record.get('EDAT'), '%Y/%m/%d %H:%M')
                     mhda = datetime.strptime(record.get('MHDA'), '%Y/%m/%d %H:%M')
                     durations[crdt.strftime('%Y')].append((mhda - edat).days)
+                    num_mesh_records[crdt.strftime('%Y')] += 1
                 total += 1
             except http.client.IncompleteRead:
                 print('Error: IncompleteRead, following is the detail of the error')
@@ -64,8 +67,11 @@ def measure_annotation_time(start_date, end_date, count, webenv, query_key, mesh
             print(str(i), sum(durations[str(i)])/len(durations[str(i)]))
     print('Total number of records by year:')
     for i in range(int(start_date), int(end_date) + 1):
-        print(str(i), num_records[str(i)])
+        print(str(i), num_total_records[str(i)])
     print('Total number of records without creating date:', total_miss_crdt)
+    print('Total number of records with Mesh terms by year')
+    for i in range(int(start_date), int(end_date) + 1):
+        print(str(i), num_mesh_records[str(i)])
     return filtered_ids
 
 
